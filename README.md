@@ -137,3 +137,14 @@ Once the Docker image is built, you can run the application using the `docker ru
 *   `youtube_converter.py`: The main Python script for downloading and conversion.
 *   `Dockerfile`: Instructions for Docker to build the application image.
 *   `README.md`: This documentation file.
+
+
+## Contact Me
+
+If you have any questions, suggestions, or issues with this project, feel free to reach out or open an issue on the GitHub repository.
+
+*   **Project Maintainer**: [Asitha Kanchana Palliyaguru / Asithakanchana1]
+*   **GitHub Repository**: [https://github.com/Asithakanchana1]
+*   **Issues/Bugs**: Please report any bugs or request features by opening an issue on the [GitHub Issues page for this project](https://github.com/AsithaKanchana1/yt-video-downloader]/issues).
+*   **Email (Optional)**: [asitha.contact.me@gmail.com]
+*   **LinkedIn (Optional)**: [[LinkedIn profile](https://lk.linkedin.com/in/asithakanchana)]
