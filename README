@@ -4,38 +4,42 @@ This project provides a Python script, packaged in a Docker container, to downlo
 
 ## Features
 
-*   Download YouTube videos in the highest available progressive resolution.
-*   Convert downloaded videos into MP3 audio files.
-*   Maintains a history of processed links in `yt_links.txt` to avoid re-downloading/re-converting.
-*   Dockerized for easy setup, portability, and dependency management.
-*   Persistent storage for downloaded videos, converted songs, and link history via Docker volumes.
+* Download YouTube videos in the highest available progressive resolution.
+* Convert downloaded videos into MP3 audio files.
+* Maintains a history of processed links in `yt_links.txt` to avoid re-downloading/re-converting.
+* Dockerized for easy setup, portability, and dependency management.
+* Persistent storage for downloaded videos, converted songs, and link history via Docker volumes.
 
 ## Prerequisites
 
-1.  **Docker**: You need to have Docker installed and running on your system.
-    *   Download Docker: [https://www.docker.com/get-started](https://www.docker.com/get-started)
-2.  **Project Files**:
-    *   `youtube_converter.py` (the Python script)
-    *   `Dockerfile` (to build the Docker image)
+1. **Docker**: You need to have Docker installed and running on your system.
+    * Download Docker: [https://www.docker.com/get-started](https://www.docker.com/get-started)
+
+2. **Project Files**:
+    * `youtube_converter.py` (the Python script)
+    * `Dockerfile` (to build the Docker image)
 
 ## Setup: Building the Docker Image
 
-1.  **Clone or Download Files**:
+1. **Clone or Download Files**:
     Ensure you have the `youtube_converter.py` script and the `Dockerfile` in the same directory on your local machine.
 
-2.  **Open Your Terminal/Command Prompt**:
+2. **Open Your Terminal/Command Prompt**:
     Navigate to the directory where you saved the project files.
-    ```
+
+    ```bash
     cd path/to/your/project-directory
     ```
 
-3.  **Build the Docker Image**:
+3. **Build the Docker Image**:
     Run the following command to build the Docker image. This will download the Python base image, install `ffmpeg`, and install the necessary Python libraries (`pytubefix`, `moviepy`).
-    ```
+  
+    ```bash
     docker build -t youtube-converter-app .
     ```
-    *   `-t youtube-converter-app`: Tags the image with the name `youtube-converter-app`.
-    *   `.`: Specifies that the `Dockerfile` is in the current directory.
+
+- `-t youtube-converter-app`: Tags the image with the name `youtube-converter-app`.
+-  `.`: Specifies that the `Dockerfile` is in the current directory.
 
     This process might take a few minutes the first time you run it.
 
@@ -43,40 +47,48 @@ This project provides a Python script, packaged in a Docker container, to downlo
 
 Once the Docker image is built, you can run the application using the `docker run` command.
 
-1.  **Create Host Directories (Recommended for Persistent Storage)**:
+1. **Create Host Directories (Recommended for Persistent Storage)**:
     It's highly recommended to create directories on your host machine where the downloaded videos, converted songs, and the link history file will be stored. This ensures your data persists even if the container is stopped or removed.
 
     **In PowerShell (Windows):**
-    ```
+ 
+    ```powershell
     New-Item -ItemType Directory -Force -Path ".\my_yt_videos"
     New-Item -ItemType Directory -Force -Path ".\my_yt_songs"
     New-Item -ItemType Directory -Force -Path ".\my_yt_data"
     ```
+ 
     **In Bash/Zsh (Linux/macOS):**
-    ```
+
+    ```bash
     mkdir -p ./my_yt_videos
     mkdir -p ./my_yt_songs
     mkdir -p ./my_yt_data
     ```
+
     You can name these directories anything you like; just ensure the names match in the `docker run` command.
 
-2.  **Run the Docker Container**:
+2. **Run the Docker Container**:
 
     **For PowerShell (Windows):**
-    ```
+  
+    ```powershell
     docker run -it --rm `
         -v "${PWD}\my_yt_videos:/app/videos" `
         -v "${PWD}\my_yt_songs:/app/songs" `
         -v "${PWD}\my_yt_data:/app/data" `
         youtube-converter-app
     ```
+
     *As a single line:*
-    ```
+
+```powershell
     docker run -it --rm -v "${PWD}\my_yt_videos:/app/videos" -v "${PWD}\my_yt_songs:/app/songs" -v "${PWD}\my_yt_data:/app/data" youtube-converter-app
     ```
 
     **For Bash/Zsh (Linux/macOS):**
-    ```
+    
+    ```bash
     docker run -it --rm \
         -v "$(pwd)/my_yt_videos:/app/videos" \
         -v "$(pwd)/my_yt_songs:/app/songs" \
