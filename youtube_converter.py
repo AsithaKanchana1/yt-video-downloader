@@ -1,14 +1,13 @@
 # youtube_converter.py
 # Used pytubefix
 
-from moviepy.editor import VideoFileClip
 from pytubefix import YouTube
 import os
 
 # Define base paths inside the container
 BASE_DATA_PATH = "/app/data"
 VIDEO_SAVE_PATH = "/app/videos"
-AUDIO_SAVE_PATH = "/app/songs"
+# AUDIO_SAVE_PATH has been removed
 LINKS_FILE_PATH = os.path.join(BASE_DATA_PATH, "yt_links.txt")
 
 def ensure_dir(directory_path):
@@ -17,7 +16,7 @@ def ensure_dir(directory_path):
 def vid_dlr(your_link):
     ensure_dir(BASE_DATA_PATH)
     ensure_dir(VIDEO_SAVE_PATH)
-    ensure_dir(AUDIO_SAVE_PATH)
+    # ensure_dir for AUDIO_SAVE_PATH has been removed
 
     print("\n\n\nVerifying your Link Please Wait ...")
     all_Links_lst = []
@@ -42,14 +41,13 @@ def vid_dlr(your_link):
         print(f"Fetching video information from {your_link} using pytubefix...")
         yt = YouTube(your_link)
 
-        # --- Quality selection ---
-        print("\nAvailable video streams (adaptive - video only):")
+        # --- Quality selection for video ---
+        print("\nAvailable video streams (adaptive - video only, likely no sound in output):")
         video_streams = yt.streams.filter(adaptive=True, file_extension='mp4').order_by('resolution').desc()
 
-        print("\nAvailable audio streams (audio only):")
-        audio_streams = yt.streams.filter(only_audio=True, file_extension='mp4').order_by('abr').desc()
-        if not video_streams or not audio_streams:
-            print("Could not find video or audio streams.")
+        # Audio stream listing and selection has been removed
+        if not video_streams:
+            print("Could not find any video streams to download.")
             return
 
         for i, stream in enumerate(video_streams):
@@ -78,33 +76,28 @@ def vid_dlr(your_link):
 
         print(f"Selected video quality: Resolution: {video_stream.resolution}, FPS: {video_stream.fps}")
 
-        # Select the best available audio stream
-        audio_stream = audio_streams.first()
-        print(f"Selected audio quality: Bitrate {audio_stream.abr}")
+        # Audio stream download has been removed
 
         print(f"Attempting to download video to: {VIDEO_SAVE_PATH}")
-        video_file_path = video_stream.download(output_path=VIDEO_SAVE_PATH, filename="video_only")
-        print(f"Attempting to download audio to: {AUDIO_SAVE_PATH}")
-        audio_file_path = audio_stream.download(output_path=AUDIO_SAVE_PATH, filename="audio_only")
-        # --- End quality selection ---
+        # Downloading the selected video-only stream. The filename is kept simple.
+        # You might want to generate a more descriptive name based on the video title.
+        downloaded_video_path = video_stream.download(output_path=VIDEO_SAVE_PATH, filename_prefix="video_")
+        
+        # The downloaded file will be named something like "video_Video Title.mp4"
+        # If you want a fixed name like "video_only.mp4", you can use:
+        # filename = "video_only.mp4"
+        # if os.path.exists(os.path.join(VIDEO_SAVE_PATH, filename)):
+        #    os.remove(os.path.join(VIDEO_SAVE_PATH, filename)) # Optional: remove if exists
+        # downloaded_video_path = video_stream.download(output_path=VIDEO_SAVE_PATH, filename=filename)
 
-        # --- Merge audio and video using MoviePy ---
-        print("Merging audio and video...")
-        video_clip = VideoFileClip(video_file_path)
-        audio_clip = AudioFileClip(audio_file_path)
-        final_clip = video_clip.set_audio(audio_clip)
 
-        output_file_path = os.path.join(VIDEO_SAVE_PATH, "final_video.mp4")
-        final_clip.write_videofile(output_file_path, codec="libx264", audio_codec="aac")
+        # --- Merging audio and video section has been removed ---
+        
+        # The output_file_path is now directly the path of the downloaded video stream
+        output_file_path = downloaded_video_path
 
-        video_clip.close()
-        audio_clip.close()
-        final_clip.close()
-        # Remove temporary audio and video files
-        os.remove(video_file_path)
-        os.remove(audio_file_path)
-
-        print(f"Video downloaded and merged successfully: {output_file_path}")
+        print(f"Video downloaded successfully: {os.path.basename(output_file_path)} at {output_file_path}")
+        print("NOTE: This video file likely does not contain audio as only the video stream was downloaded.")
 
         print(f"Adding link '{your_link}' to {LINKS_FILE_PATH}...")
         with open(LINKS_FILE_PATH, 'a') as f:
@@ -116,10 +109,10 @@ def vid_dlr(your_link):
         print(f"An error occurred: {e}")
         print("The link was NOT added to the library due to the error.")
 
-from moviepy.editor import VideoFileClip, AudioFileClip
+# Removed VideoFileClip, AudioFileClip from moviepy.editor as they are no longer used for merging/conversion
 
 if __name__ == "__main__":
-    print(" -__________YOUTUBE VIDEO DOWNLOADER & AUDIO CONVERTER (using pytubefix) ___________-")
+    print(" -__________YOUTUBE VIDEO DOWNLOADER (using pytubefix) ___________-") # Title updated
     print(" -____________________________BY ASI SOLUTION ______________________________________-")
     while True:
         link = input("\nEnter Link here (or type 'exit' to quit) >>  ").strip()
