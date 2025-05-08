@@ -82,7 +82,7 @@ Once the Docker image is built, you can run the application using the `docker ru
 
     *As a single line:*
 
-```powershell
+    ```powershell
     docker run -it --rm -v "${PWD}\my_yt_videos:/app/videos" -v "${PWD}\my_yt_songs:/app/songs" -v "${PWD}\my_yt_data:/app/data" youtube-converter-app
     ```
 
