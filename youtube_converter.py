@@ -1,14 +1,8 @@
 # youtube_converter.py
 # Used pytubefix
 
-# ---- The _default_clients section for pytube is no longer needed and can be removed or commented out ----
-# from pytube.innertube import _default_clients
-# _default_clients["ANDROID"]["context"]["client"]["clientVersion"] = "19.08.35"
-# ... (rest of the _default_clients lines)
-# ---- END OF PYTUBE FIX SECTION ----
-
 from moviepy.editor import VideoFileClip
-from pytubefix import YouTube # <--- CHANGE HERE
+from pytubefix import YouTube
 import os
 
 # Define base paths inside the container
@@ -27,67 +21,107 @@ def vid_dlr(your_link):
 
     print("\n\n\nVerifying your Link Please Wait ...")
     all_Links_lst = []
-    
+
     if not os.path.exists(LINKS_FILE_PATH):
         with open(LINKS_FILE_PATH, 'w') as f:
-            pass 
+            pass
         print(f"Created new links file at: {LINKS_FILE_PATH}")
 
     with open(LINKS_FILE_PATH, "r") as f:
         all_links_content = f.read()
         if all_links_content:
-            all_Links_lst = [line for line in all_links_content.split("\n") if line.strip()]      
-    
+            all_Links_lst = [line for line in all_links_content.split("\n") if line.strip()]
+
     if your_link in all_Links_lst:
         print(f"Link '{your_link}' already processed and present in your Library.")
         return
-            
+
     print(f"Link '{your_link}' not found in library. Proceeding with download.")
-    
+
     try:
-        print(f"Downloading Video from {your_link} using pytubefix...") # Updated to pytubefix 
-        yt = YouTube(your_link) # <--- USES PYTUBEFIX OBJECT NOW
-        my_video = yt.streams.get_highest_resolution()
-        
-        print(f"Attempting to download to: {VIDEO_SAVE_PATH}")
-        out_file_path = my_video.download(output_path=VIDEO_SAVE_PATH)
-        
-        vid_name = os.path.basename(out_file_path)
-        print(f"Video downloaded successfully: {vid_name} at {out_file_path}")
-        
-        base_vid_name, _ = os.path.splitext(vid_name)
-        vidmp3_name = base_vid_name + ".mp3"
-        
-        print(f"Converting '{vid_name}' into Audio '{vidmp3_name}'...")
-        mp4_file_full_path = os.path.join(VIDEO_SAVE_PATH, vid_name)
-        mp3_file_full_path = os.path.join(AUDIO_SAVE_PATH, vidmp3_name)
-        
-        if not os.path.exists(mp4_file_full_path):
-            print(f"ERROR: Downloaded video file not found at '{mp4_file_full_path}' for conversion.")
+        print(f"Fetching video information from {your_link} using pytubefix...")
+        yt = YouTube(your_link)
+
+        # --- Quality selection ---
+        print("\nAvailable video streams (adaptive - video only):")
+        video_streams = yt.streams.filter(adaptive=True, file_extension='mp4').order_by('resolution').desc()
+
+        print("\nAvailable audio streams (audio only):")
+        audio_streams = yt.streams.filter(only_audio=True, file_extension='mp4').order_by('abr').desc()
+        if not video_streams or not audio_streams:
+            print("Could not find video or audio streams.")
             return
 
-        videoclip = VideoFileClip(mp4_file_full_path)
-        audioclip = videoclip.audio
-        audioclip.write_audiofile(mp3_file_full_path)
-        audioclip.close()
-        videoclip.close()
-        
-        print(f"Conversion complete. Audio saved to: {mp3_file_full_path}")
-        
+        for i, stream in enumerate(video_streams):
+            print(f"{i+1}. Resolution: {stream.resolution}, FPS: {stream.fps}, Type: {stream.mime_type}")
+
+        while True:
+            try:
+                choice = input(f"Enter the number of the desired video quality (1-{len(video_streams)}), or 'h' for highest, 'l' for lowest: ").strip().lower()
+                if choice == 'h':
+                    video_stream = video_streams.first()
+                    break
+                elif choice == 'l':
+                    video_stream = video_streams.last()
+                    break
+                elif choice.isdigit() and 1 <= int(choice) <= len(video_streams):
+                    video_stream = video_streams[int(choice)-1]
+                    break
+                else:
+                    print(f"Invalid input. Please enter a number between 1 and {len(video_streams)}, 'h', or 'l'.")
+            except ValueError:
+                print("Invalid input. Please enter a valid number, 'h', or 'l'.")
+
+        if not video_stream:
+            print("Error selecting video stream. Aborting.")
+            return
+
+        print(f"Selected video quality: Resolution: {video_stream.resolution}, FPS: {video_stream.fps}")
+
+        # Select the best available audio stream
+        audio_stream = audio_streams.first()
+        print(f"Selected audio quality: Bitrate {audio_stream.abr}")
+
+        print(f"Attempting to download video to: {VIDEO_SAVE_PATH}")
+        video_file_path = video_stream.download(output_path=VIDEO_SAVE_PATH, filename="video_only")
+        print(f"Attempting to download audio to: {AUDIO_SAVE_PATH}")
+        audio_file_path = audio_stream.download(output_path=AUDIO_SAVE_PATH, filename="audio_only")
+        # --- End quality selection ---
+
+        # --- Merge audio and video using MoviePy ---
+        print("Merging audio and video...")
+        video_clip = VideoFileClip(video_file_path)
+        audio_clip = AudioFileClip(audio_file_path)
+        final_clip = video_clip.set_audio(audio_clip)
+
+        output_file_path = os.path.join(VIDEO_SAVE_PATH, "final_video.mp4")
+        final_clip.write_videofile(output_file_path, codec="libx264", audio_codec="aac")
+
+        video_clip.close()
+        audio_clip.close()
+        final_clip.close()
+        # Remove temporary audio and video files
+        os.remove(video_file_path)
+        os.remove(audio_file_path)
+
+        print(f"Video downloaded and merged successfully: {output_file_path}")
+
         print(f"Adding link '{your_link}' to {LINKS_FILE_PATH}...")
         with open(LINKS_FILE_PATH, 'a') as f:
             f.write(your_link + "\n")
 
         print("All Tasks Accomplished .. DONE")
-    
+
     except Exception as e:
         print(f"An error occurred: {e}")
         print("The link was NOT added to the library due to the error.")
 
+from moviepy.editor import VideoFileClip, AudioFileClip
+
 if __name__ == "__main__":
     print(" -__________YOUTUBE VIDEO DOWNLOADER & AUDIO CONVERTER (using pytubefix) ___________-")
     print(" -____________________________BY ASI SOLUTION ______________________________________-")
-    while True: 
+    while True:
         link = input("\nEnter Link here (or type 'exit' to quit) >>  ").strip()
         if link.lower() == 'exit':
             print("Exiting application.")
