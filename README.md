@@ -155,4 +155,4 @@ If you have any questions, suggestions, or issues with this project, feel free t
 *   **GitHub Repository**: [https://github.com/Asithakanchana1]
 *   **Issues/Bugs**: Please report any bugs or request features by opening an issue on the [GitHub Issues page for this project](https://github.com/AsithaKanchana1/yt-video-downloader]/issues).
 *   **Email (Optional)**: [asitha.contact.me@gmail.com]
-*   **LinkedIn (Optional)**: [[Link to your LinkedIn profile](https://lk.linkedin.com/in/asithakanchana)]
+*   **LinkedIn (Optional)**: [[LinkedIn profile](https://lk.linkedin.com/in/asithakanchana)]
